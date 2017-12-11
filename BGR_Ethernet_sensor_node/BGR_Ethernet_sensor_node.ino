@@ -14,6 +14,25 @@
 
 #define ADC_PIN_    0
 
+
+// RAN =============
+
+
+int diode = 0;
+int triger = 800;
+int LlastLight;                // variable to store last button state
+int RlastLight; 
+long LstartTime ;                    // start time for stop watch
+long RstartTime ;
+long elapsedTime ;                  // elapsed time for stop watch
+int LVx = 0;
+int RVx = 0;
+int Llight = 0;
+int Rlight = 0;
+
+// RAN ==============
+
+
 typedef union _group_16 {
   int u16;
   uint8_t u8[2];
@@ -67,6 +86,15 @@ uint8_t buf[200];
 
 
 void setup() {
+  
+// RAN ======
+  
+   pinMode(A0, INPUT);
+   pinMode(A1, INPUT);
+  
+// RAN ======
+  
+  
   // put your setup code here, to run once:
 Serial.begin(9600);
 
@@ -131,10 +159,43 @@ sensor_frame.frame.number_of_sens = 1;
 
 sensor_frame.frame.sens_array[0].sens_id = 0xF0;
 
-sensor_frame.frame.sens_array[0].sens_data = FlipEindian(analogRead(A0));
-_delay_ms(20);
+  
+// RAN ================
+  
+  
+  //**************************************** code for left *************************************************** 
+   Llight = analogRead(A0); 
+   if (Llight > triger && LlastLight < triger)          // check if get to hole
+
+   {     
+
+      elapsedTime =   millis() - LstartTime;
+      LstartTime = millis();                                   // store the start time
+     LVx =  3.6*44*PI*elapsedTime/1000 ;                            //elapsedTime/1000 its make time in sec multiply by 2pi multiply by R eff
+   
+   }
+      LlastLight = Llight;                     // store buttonState in lastButtonState, to compare next time
+      Serial.println(LVx); 
+//********************************************* code for right ****************************************************
+  Rlight = analogRead(A1);
+   if (Rlight > triger && RlastLight < triger)          // check if get to hole
+
+   {     
+
+      elapsedTime =   millis() - RstartTime;
+      RstartTime = millis();                                   // store the start time
+     RVx =  3.6*44*PI*elapsedTime/1000 ;                            //elapsedTime/1000 its make time in sec multiply by 2pi multiply by R eff 
+   }
+        RlastLight = Rlight;                     // store buttonState in lastButtonState, to compare next time
+
+        Serial.println(RVx);   
+
+sensor_frame.frame.sens_array[0].sens_data = FlipEindian(LVx);
+  
 sensor_frame.frame.sens_array[1].sens_id = 0xF1;
-sensor_frame.frame.sens_array[1].sens_data = FlipEindian(analogRead(A1));
+sensor_frame.frame.sens_array[1].sens_data = FlipEindian(RVx);
+// RAN ==================  
+
 _delay_ms(20);
 sensor_frame.frame.sens_array[2].sens_id = 0xF2;
 sensor_frame.frame.sens_array[2].sens_data = FlipEindian(analogRead(A2));;
